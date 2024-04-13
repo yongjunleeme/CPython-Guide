@@ -1,0 +1,630 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>1. CPython 살펴보기 &#8212; PseudoLab [CPython 파헤치기]</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/1_0_welcome_to_cpython';</script>
+    <link rel="shortcut icon" href="../_static/PseudoLab_logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2. 개발 환경 세팅" href="2_0_settings.html" />
+    <link rel="prev" title="CPython Guide for PseudoLab" href="../intro.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../intro.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/PseudoLab_logo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../_static/PseudoLab_logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../intro.html">
+                    CPython Guide for PseudoLab
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">◽ CPython 가이드</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">1. CPython 살펴보기</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2_0_settings.html">2. 개발 환경 세팅</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3_0_compile.html">3. 컴파일하기</a></li>
+<li class="toctree-l1"><a class="reference internal" href="4_0_python_grammar.html">4. 언어와 문법</a></li>
+<li class="toctree-l1"><a class="reference internal" href="5_0_config_and_input.html">5. 구성과 입력</a></li>
+<li class="toctree-l1"><a class="reference internal" href="6_0_rexing_and_parsing.html">6. 렉싱과 파싱</a></li>
+<li class="toctree-l1"><a class="reference internal" href="7_0_compiler.html">7. 컴파일러</a></li>
+<li class="toctree-l1"><a class="reference internal" href="8_0_eval_loop.html">8. 평가 루프</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="9_0_memory.html">9. 메모리 관리</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="9_1_memory_pool.html">메모리 풀</a></li>
+<li class="toctree-l2"><a class="reference internal" href="9_2_garbage_collection.html">레퍼런스 카운팅과 가비지 컬렉션</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="10_0_parallel_and_concurrent.html">10. 병렬성과 동시성</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="10_1_process.html">프로세스</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_2_thread.html">스레드</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_3_async.html">비동기 프로그래밍</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="11_0_object_and_type.html">11. 객체와 타입</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_0_standard_library.html">12. 표준 라이브러리</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_0_test_suite.html">13. 테스트 스위트</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_0_c_extension.html">Python C 확장 개발 가이드</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/pseudo-lab/CPython-Guide" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/pseudo-lab/CPython-Guide/issues/new?title=Issue%20on%20page%20%2Fdocs/1_0_welcome_to_cpython.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/docs/1_0_welcome_to_cpython.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>1. CPython 살펴보기</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">1.1 CPython이란?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">1.2 CPython 배포판 구성 요소</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">1.3 소스 코드 들여다보기</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="cpython">
+<h1>1. CPython 살펴보기<a class="headerlink" href="#cpython" title="Permalink to this heading">#</a></h1>
+<blockquote>
+<div><p>앞으로 저희는 CPython에 대해 아래 내용을 다루게 됩니다 🚀</p>
+<ul class="simple">
+<li><p><strong>CPython 소스 코드 읽고 탐색 / 컴파일</strong>하기</p></li>
+<li><p>Python 문법 수정하고 컴파일해서 자신만의 CPython 버전 만들기</p></li>
+<li><p>list, dictionary, generator 등의 <strong>내부 작동 방식 이해</strong>하기</p></li>
+<li><p>CPython <strong>메모리 관리 기능</strong> 이해하기</p></li>
+<li><p><strong>병렬성과 동시성</strong>을 통해 Python 코드 확장하기</p></li>
+<li><p>코어 타입에 새로운 기능 추가하기</p></li>
+<li><p><strong>테스트 스위트</strong> 실행하기</p></li>
+<li><p>Python <strong>코드와 런타임 성능을 프로파일하고 벤치마크</strong>하기</p></li>
+<li><p>C 코드와 Python 코드를 전문가처럼 <strong>디버깅</strong>하기</p></li>
+<li><p>CPython 라이브러리의 구성 요소를 수정하거나 개선해서 <strong>향후 CPython에 기여</strong>하기</p></li>
+</ul>
+</div></blockquote>
+<section id="id1">
+<h2>1.1 CPython이란?<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Python 구현체 중 하나로, 일반적으로 이용하는 <a class="reference external" href="http://python.org">python.org</a> 에서 제공하는 공식 파이썬 구현체입니다.</p></li>
+<li><p>이름에서 알 수 있듯이, CPython은 C로 구현되어 있습니다.</p></li>
+<li><p>다른 python 구현체</p>
+<ul>
+<li><p>Jython</p>
+<ul>
+<li><p>Java로 작성된 파이썬 구현체</p></li>
+<li><p>JVM(Java Virtual Machine)에서 실행</p></li>
+</ul>
+</li>
+<li><p>IronPython</p>
+<ul>
+<li><p>C#로 작성된 파이썬 구현체</p></li>
+<li><p>.NET 프레임워크 사용</p></li>
+</ul>
+</li>
+<li><p>PyPy</p>
+<ul>
+<li><p>Python 정적 타입으로 작성된 파이썬 구현체
+<br>(정적 타입: 실행하기 전에 변수의 type을 미리 결정하고, 그 이후에는 type을 변경하지 않는 방식)</p></li>
+<li><p>JIT(Just-In-Time: 프로그램을 실행하는 동안 실시간으로 기계어로 변환) 컴파일러 방식으로 구현되어 기존 interpreter 방식보다 빠르고 효율적</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id2">
+<h2>1.2 CPython 배포판 구성 요소<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>언어 사양(Language Specification)</strong>: 파이썬 언어의 문법, 구문, 의미론</p>
+<ul>
+<li><p>ex) <code class="docutils literal notranslate"><span class="pre">[]</span></code>: 인덱싱, 슬라이싱, 빈 리스트 생성을 위해 사용</p></li>
+</ul>
+</li>
+<li><p><strong>컴파일러(Interpreter)</strong>: C 언어로 작성된 컴파일러</p>
+<ul>
+<li><p>파이썬 소스 코드 → 실행 가능한 기계어로 변환하는 역할</p></li>
+</ul>
+</li>
+<li><p><strong>표준 라이브러리 모듈(Standard Library Modules)</strong>: 기본적으로 포함되어 있는 패키지</p>
+<ul>
+<li><p>ex) 파일 입출력, 네트워킹, 문자열 처리, 데이터 구조, GUI 프로그래밍 등</p></li>
+</ul>
+</li>
+<li><p><strong>코어 타입(Core Types)</strong>: 내장 데이터 type</p>
+<ul>
+<li><p>ex) 숫자, 문자열, list, tuple, dictionary</p></li>
+</ul>
+</li>
+<li><p><strong>테스트 스위트(Test Suite)</strong>: 개발 및 유지 보수에 사용되는 테스트 모음</p>
+<ul>
+<li><p>ex) 유닛 테스트, 통합 테스트, 성능 테스트</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id3">
+<h2>1.3 소스 코드 들여다보기<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h2>
+<ul>
+<li><p>소스 코드 다운로드 (3.9 버전을 기준으로 살펴볼 예정입니다.)</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--branch<span class="w"> </span><span class="m">3</span>.9<span class="w"> </span>https://github.com/python/cpython
+</pre></div>
+</div>
+</li>
+<li><p>소스 코드 구성</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpython
+├──<span class="w"> </span>CODE_OF_CONDUCT.md
+├──<span class="w"> </span>Doc<span class="w">        </span><span class="c1"># 문서 소스 파일</span>
+├──<span class="w"> </span>Grammar<span class="w">    </span><span class="c1"># 컴퓨터가 읽을 수 있는 언어 정의</span>
+├──<span class="w"> </span>Include<span class="w">    </span><span class="c1"># C 헤더 파일</span>
+├──<span class="w"> </span>LICENSE
+├──<span class="w"> </span>Lib<span class="w">        </span><span class="c1"># 파이썬으로 작성된 표준 라이브러리 모듈</span>
+├──<span class="w"> </span>Mac<span class="w">        </span><span class="c1"># macOS를 위한 파일</span>
+├──<span class="w"> </span>Makefile.pre.in
+├──<span class="w"> </span>Misc<span class="w">       </span><span class="c1"># 기타 파일</span>
+├──<span class="w"> </span>Modules<span class="w">    </span><span class="c1"># C로 작성된 표준 라이브러리 모듈</span>
+├──<span class="w"> </span>Objects<span class="w">    </span><span class="c1"># 코어 타입과 객체 모델</span>
+├──<span class="w"> </span>PC<span class="w">         </span><span class="c1"># 이전 버전의 윈도우를 위한 윈도우 빌드 지원 파일</span>
+├──<span class="w"> </span>PCbuild<span class="w">    </span><span class="c1"># 윈도우 빌드 지원 파일</span>
+├──<span class="w"> </span>Parser<span class="w">     </span><span class="c1"># 파이썬 파서 소스 코드</span>
+├──<span class="w"> </span>Programs<span class="w">   </span><span class="c1"># python 실행 파일과 기타 바이너리를 위한 소스 코드</span>
+├──<span class="w"> </span>Python<span class="w">     </span><span class="c1"># CPython 인터프리터 소스 코드</span>
+├──<span class="w"> </span>README.rst
+├──<span class="w"> </span>Tools<span class="w">      </span><span class="c1"># CPython 빌드하거나 확장하는 데 유용한 독립 실행형 도구</span>
+├──<span class="w"> </span>aclocal.m4
+├──<span class="w"> </span>config.guess
+├──<span class="w"> </span>config.sub
+├──<span class="w"> </span>configure
+├──<span class="w"> </span>configure.ac
+├──<span class="w"> </span>install-sh
+├──<span class="w"> </span>pyconfig.h.in
+└──<span class="w"> </span>setup.py
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./docs"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../intro.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">CPython Guide for PseudoLab</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="2_0_settings.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">2. 개발 환경 세팅</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">1.1 CPython이란?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">1.2 CPython 배포판 구성 요소</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">1.3 소스 코드 들여다보기</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By PseudoLab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
